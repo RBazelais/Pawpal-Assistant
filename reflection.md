@@ -52,13 +52,11 @@ Three tradeoffs were decided during data modeling:
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+AI was used as a senior engineering mentor throughout — not to generate code blindly, but to think through design decisions together before writing anything. The most useful interactions were conversational: talking through tradeoffs (fill_gaps, skipped task structure, date types), designing the category ranking collaboratively, and walking through the scheduler logic piece by piece before it was written.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+When AI suggested `auto_escalate` as a global setting on `Owner`, we pushed back — everyday tasks like feed and walk shouldn't escalate, but periodic tasks like trim nails should be able to opt in. That distinction came from thinking about the real user, not the data model. The AI accepted the correction and updated the design. We also caught a failing test where the test itself was wrong (not the scheduler), which confirmed the sort logic was working correctly rather than masking a bug by fixing the wrong thing.
 
 ---
 
@@ -88,12 +86,12 @@ Edge cases to test next: empty task list, all tasks skipped, owner with 0 availa
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+The flexibility built into the application. Owners can skip tasks, reschedule them, leave notes for why something didn't happen, and the system handles it gracefully without breaking. That flexibility was designed in from the start, not bolted on later.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+Full CRUD — adding edit and delete for individual tasks would complete the task management experience. The other big addition would be calendar export so a generated schedule could go straight into Google Calendar or Apple Calendar. Right now the plan lives only in the app.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+You need to account for when people won't do what you expect. Users skip things, run out of time, get sick, change their minds. A system that only works when everything goes according to plan isn't useful. The rescheduling, status tracking, and fill_gaps decisions all came from asking "what happens when the user doesn't follow the golden path?"
