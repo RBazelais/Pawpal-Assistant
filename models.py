@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import List, Optional
 
+from helpers import format_date  # noqa: F401 — re-exported for convenience
+
 CATEGORIES = [
     "walk",
     "feed",
@@ -23,11 +25,6 @@ PRIORITIES = ["low", "medium", "high"]
 PRIORITY_RANK = {"low": 1, "medium": 2, "high": 3}
 
 STATUSES = ["pending", "done", "rescheduled", "skipped"]
-
-
-def format_date(d: date) -> str:
-    """Convert a datetime.date to a readable string for display."""
-    return d.strftime("%B %d, %Y")  # e.g. "March 31, 2026"
 
 
 @dataclass
@@ -52,7 +49,8 @@ class Owner:
     name: str
     start_time: str           # e.g. "9:00 AM"
     available_minutes: int    # total minutes available for the day
-    reminder_threshold: int = 3  # reschedule count that triggers a reminder
+    reminder_threshold: int = 3    # reschedule count that triggers a reminder
+    fill_gaps: bool = False        # if False, stop scheduling when first task doesn't fit
 
 
 @dataclass

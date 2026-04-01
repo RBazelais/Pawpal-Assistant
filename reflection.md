@@ -26,9 +26,13 @@ Adding `status` (`pending`, `done`, `rescheduled`, `skipped`) and an optional `n
 
 **a. Constraints and priorities**
 
-The scheduler considers two primary constraints: available time (owner sets total minutes for the day and a start time) and task priority (low/medium/high). Tasks are ordered by priority and scheduled until time runs out.
+The sorting logic is biology first. Tasks are sorted by three levels:
 
-A secondary constraint is reschedule history — tasks with `auto_escalate = True` have their priority bumped after hitting the owner's `reminder_threshold`. This means frequently skipped tasks naturally rise in the schedule over time.
+1. **Priority** (high → low) — the owner's stated urgency comes first
+2. **Category rank** — within the same priority, biological needs take precedence. Feed before meds, meds before potty break, daily care before periodic grooming. A pet's basic needs aren't negotiable.
+3. **Duration** (shortest first) — within the same priority and category, shorter tasks go first to maximize how many things get done
+
+A fourth constraint is reschedule history — tasks with `auto_escalate = True` have their priority bumped before sorting if they've been pushed back past the owner's `reminder_threshold`. This means neglected tasks naturally rise in the schedule over time without the owner having to remember to reprioritize them.
 
 **b. Tradeoffs**
 
@@ -39,6 +43,8 @@ Three tradeoffs were decided during data modeling:
 2. **Skipped tasks in one list.** Rather than maintaining a separate `skipped` list, all tasks (scheduled and skipped) live in `Schedule.items` distinguished by `status`. This makes rescheduling consistent — any item can be acted on the same way — and the UI handles the visual separation.
 
 3. **`datetime.date` over strings.** Dates use `datetime.date` so the app can do time-based math (e.g. days since last completed, week-over-week reschedule patterns). A `format_date()` helper handles display conversion.
+
+4. **`fill_gaps` defaults to False.** When a task doesn't fit, the scheduler stops rather than scanning ahead for smaller tasks that might fit. The default gives owners breathing room — both owners and pets need buffer between tasks, and an overpacked schedule is harder to stick to. Owners can opt in to gap-filling if they want a denser day, but that choice is theirs to make.
 
 ---
 
