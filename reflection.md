@@ -66,13 +66,21 @@ Three tradeoffs were decided during data modeling:
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+Five behaviors were tested:
+
+1. **Priority ordering** — high priority tasks appear before low priority ones
+2. **Time constraint** — tasks that exceed remaining time are marked skipped
+3. **fill_gaps=False** — scheduling stops after the first task that doesn't fit; remaining tasks are skipped even if they would fit
+4. **Auto-escalate** — a task's priority bumps up one level when reschedule_count hits the owner's reminder_threshold
+5. **Category rank tiebreaker** — when two tasks share the same priority, the one with a lower category rank (more biologically urgent) is scheduled first
+
+These tests matter because they cover the three-level sort, the time constraint, and the two owner-configurable behaviors (fill_gaps and auto_escalate). If any of these break, the schedule will be wrong in ways the owner might not notice.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+The core scheduling logic is well covered. One test initially failed because the test assumed a wrong task order — the scheduler correctly sorted by priority before category rank, which the test didn't account for. Catching and fixing that revealed the sort is working as designed.
+
+Edge cases to test next: empty task list, all tasks skipped, owner with 0 available minutes, a task already at "high" priority being auto-escalated.
 
 ---
 
