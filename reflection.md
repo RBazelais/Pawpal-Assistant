@@ -4,13 +4,21 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+We designed four core classes before writing any logic:
+
+- `Pet` — holds the pet's name and species. Kept simple intentionally; the scheduler cares about tasks, not the animal's details.
+- `Task` — the unit of work. Has a title, category (from a fixed list of 13 care types), duration in 5-min increments (5–90 min), and a priority level (low/medium/high).
+- `Owner` — represents the person planning the day. Has a name, a start time (e.g. "9:00 AM"), and total available minutes for the day.
+- `ScheduledTask` — a wrapper around a Task that adds a computed start time and a human-readable reason explaining why it was included.
+- `Schedule` — the output of the scheduler. Holds an ordered list of `ScheduledTask` items and a list of skipped tasks with reasons.
+
+Priority is stored as a string (`low/medium/high`) with a `PRIORITY_RANK` dict mapping to integers for sorting. Duration is always a multiple of 5 minutes, enforced by the UI.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+Before writing any logic, we expanded `ScheduledTask` to include `status` and `note` fields. The original design only tracked whether a task was in the schedule or skipped — but real users don't always complete their plans. Life gets in the way.
+
+Adding `status` (`pending`, `done`, `rescheduled`, `skipped`) and an optional `note` field (e.g. "Jordan was sick") means a generated schedule can be edited after the fact. Rescheduled tasks can be collected and fed into a new day's plan. This flexibility was a deliberate design choice made before the scheduler was built — not patched in later — because it affects the shape of the output data.
 
 ---
 
@@ -18,13 +26,19 @@
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+The scheduler considers two primary constraints: available time (owner sets total minutes for the day and a start time) and task priority (low/medium/high). Tasks are ordered by priority and scheduled until time runs out.
+
+A secondary constraint is reschedule history — tasks with `auto_escalate = True` have their priority bumped after hitting the owner's `reminder_threshold`. This means frequently skipped tasks naturally rise in the schedule over time.
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+Three tradeoffs were decided during data modeling:
+
+1. **History on `Task` vs. a separate log.** `reschedule_count` and `last_completed` live directly on `Task` for simplicity. The tradeoff is that we can't see the full history of when something was rescheduled — just the count. This is acceptable for now but would need a dedicated log if we ever add detailed analytics.
+
+2. **Skipped tasks in one list.** Rather than maintaining a separate `skipped` list, all tasks (scheduled and skipped) live in `Schedule.items` distinguished by `status`. This makes rescheduling consistent — any item can be acted on the same way — and the UI handles the visual separation.
+
+3. **`datetime.date` over strings.** Dates use `datetime.date` so the app can do time-based math (e.g. days since last completed, week-over-week reschedule patterns). A `format_date()` helper handles display conversion.
 
 ---
 
