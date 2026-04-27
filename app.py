@@ -18,8 +18,6 @@ tab_scheduler, tab_assistant = st.tabs(["📅 Scheduler", "💬 Ask PawPal"])
 # TAB 1 — Scheduler (unchanged)
 # ---------------------------------------------------------------------------
 with tab_scheduler:
-    st.divider()
-
     st.subheader("Owner Info")
     col1, col2 = st.columns(2)
     with col1:
