@@ -6,7 +6,7 @@ A Streamlit app that helps pet owners plan daily care tasks and ask general pet 
 
 > Watch a walkthrough of the scheduler and Ask PawPal assistant:
 
-[Insert Loom link here]
+[[Loom Demo](https://www.loom.com/share/626a5ebdbd934bb8aa3720c070ec18d7)]
 
 **Example questions shown in the demo:**
 
