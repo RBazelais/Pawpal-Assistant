@@ -22,6 +22,70 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## System Architecture
+
+### Ask PawPal — Decision Flow
+
+```mermaid
+flowchart TD
+    A([User asks a question]) --> B[Triage: keyword blocklist]
+
+    B -->|symptom / medication / injury| VET([🔴 See a vet])
+
+    B -->|no red flags| C[Species check]
+    C -->|exotic / other| IDK([🟡 I don't know enough])
+
+    C -->|dog or cat| D[RAG retrieval\nTF-IDF similarity]
+    D -->|score below threshold| IDK
+
+    D -->|score above threshold| E[LLM — grounded\non retrieved context]
+    E --> ANS([🟢 Answer with source])
+```
+
+### Scheduler — Data Model
+
+```mermaid
+classDiagram
+    class Owner {
+        +str name
+        +str start_time
+        +int available_minutes
+        +int reminder_threshold
+        +bool fill_gaps
+    }
+    class Pet {
+        +str name
+        +str species
+    }
+    class Task {
+        +str title
+        +str category
+        +int duration_minutes
+        +str priority
+        +bool auto_escalate
+        +int reschedule_count
+        +date last_completed
+    }
+    class ScheduledTask {
+        +Task task
+        +str start_time
+        +str reason
+        +str status
+        +str note
+    }
+    class Schedule {
+        +Owner owner
+        +Pet pet
+        +date date
+        +list items
+    }
+
+    Schedule --> Owner
+    Schedule --> Pet
+    Schedule "1" --> "many" ScheduledTask
+    ScheduledTask --> Task
+```
+
 ## Getting started
 
 ### Setup

@@ -95,3 +95,37 @@ Full CRUD — adding edit and delete for individual tasks would complete the tas
 **c. Key takeaway**
 
 You need to account for when people won't do what you expect. Users skip things, run out of time, get sick, change their minds. A system that only works when everything goes according to plan isn't useful. The rescheduling, status tracking, and fill_gaps decisions all came from asking "what happens when the user doesn't follow the golden path?"
+
+---
+
+## 6. AI Assistant Extension — Ask PawPal
+
+**a. What was built**
+
+A second tab was added to the app called "Ask PawPal" — a chat interface where owners can ask general pet care questions. The system uses Retrieval-Augmented Generation (RAG): instead of asking a language model to answer from memory, it first retrieves relevant facts from a curated knowledge base, then grounds the model's response in those facts only.
+
+The knowledge base is a set of markdown files organized by species (dog, cat) and topic (nutrition, behavior, grooming, health basics, safety). Each file contains 8–12 bullet-point facts from vetted sources. The retriever scores each fact against the user's query using TF-IDF similarity and returns the top matches with a confidence score.
+
+**b. Triage system design**
+
+The most important design decision was the three-way triage router that runs before any retrieval or API call:
+
+- **VET** — triggered by a hardcoded keyword blocklist covering symptoms, medication, injury, dosage, and behavioral change. These questions are never answered regardless of retrieval confidence. No amount of retrieved context makes it appropriate to answer "what dose of aspirin can I give my dog."
+- **IDK** — triggered when retrieval similarity is too low, or the species isn't covered (exotic animals). Honest uncertainty is better than a hallucinated answer.
+- **ANSWER** — only reached when retrieval is strong and no red flags are present. The model is instructed to answer only from the retrieved context and to surface source citations when they appear.
+
+The blocklist runs first, before retrieval, because retrieval is irrelevant to the VET decision. This keeps the safety guarantee hard — it can't be bypassed by rephrasing.
+
+**c. Tradeoffs**
+
+The biggest tradeoff was how strict to make the blocklist. The first version was too aggressive — "vomits after eating" routed to VET even though occasional post-meal vomiting is a common, minor issue with well-known home care advice (pumpkin puree, slow feeders). The fix was to narrow the vomit pattern to serious contexts only (blood, non-stop, days-long) while adding health_basics knowledge files so minor digestive questions get grounded, sourced answers.
+
+The TF-IDF retriever has no semantic understanding — it matches on word overlap, not meaning. A question phrased very differently from the knowledge base wording will score low and fall through to IDK. This is a conservative failure mode (better than a wrong answer) but does mean some legitimate questions get deflected. A vector embedding retriever would fix this but was intentionally excluded to keep the app pip-installable with no external services.
+
+**d. Testing**
+
+Sixteen pytest cases cover all three triage outcomes and edge cases: rephrased medical questions, behavioral change signals, exotic species, low-confidence retrieval, and the blocklist override. The test suite runs without a network connection or API key — all triage logic is tested directly with simulated retrieval scores.
+
+**e. Key takeaway**
+
+An AI assistant that answers everything confidently is more dangerous than one that says "I don't know" or "see a vet." The triage layer exists to protect the user from the model's worst failure mode — confident wrongness on medical topics. Trustworthiness in an AI feature isn't about accuracy alone; it's about knowing the boundaries of what the system should attempt to answer at all.
