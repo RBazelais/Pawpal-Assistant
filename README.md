@@ -35,7 +35,7 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
-## System Architecture
+## System Architecture Diagram
 
 ### Ask PawPal — Decision Flow
 
