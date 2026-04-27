@@ -1,6 +1,19 @@
-# PawPal+ (Module 2 Project)
+# PawPal+
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+A Streamlit app that helps pet owners plan daily care tasks and ask general pet care questions powered by a RAG-based AI assistant.
+
+## Demo
+
+> Watch a walkthrough of the scheduler and Ask PawPal assistant:
+
+[Insert Loom link here]
+
+**Example questions shown in the demo:**
+
+- "How often should I brush my dog?" - green Answer badge with source
+- "My cat has an upset stomach and vomits after eating" - green Answer badge with pumpkin puree advice
+- "What plants are toxic for cats?" - green Answer badge with sourced list
+- "What medication can I give my dog for pain?" - red See a vet badge (no API call made)
 
 ## Scenario
 
