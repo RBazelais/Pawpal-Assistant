@@ -1,10 +1,15 @@
-import os
 from typing import Any
 
 import anthropic
+import streamlit as st
+from google import genai
+from google.genai import types as genai_types
 
 from retriever import retrieve
 from triage import triage
+
+# Switch between "anthropic" and "gemini" without touching the rest of the file.
+LLM_PROVIDER = "anthropic"
 
 _VET_RESPONSE = (
     "I'm not able to answer medical, symptom, or medication questions. "
@@ -36,6 +41,10 @@ context passages provided in each message. You must follow these rules without e
 
 5. Do not suggest veterinary diagnoses or imply that any home observation replaces \
    professional veterinary assessment.
+
+6. When the context passage includes a source citation (e.g. "Source: AKC"), \
+   include it naturally at the end of your answer, e.g. "(Source: AKC)". \
+   Only cite sources that appear explicitly in the context — never fabricate one.
 """
 
 
@@ -81,15 +90,26 @@ def ask(
         f"Question: {query}"
     )
 
-    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=512,
-        system=_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
-    )
-
-    response_text = message.content[0].text if message.content else _IDK_RESPONSE
+    if LLM_PROVIDER == "anthropic":
+        client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=512,
+            system=_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_message}],
+        )
+        response_text = message.content[0].text if message.content else _IDK_RESPONSE
+    else:
+        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+        gemini_response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=user_message,
+            config=genai_types.GenerateContentConfig(
+                system_instruction=_SYSTEM_PROMPT,
+                max_output_tokens=512,
+            ),
+        )
+        response_text = gemini_response.text if gemini_response.text else _IDK_RESPONSE
 
     return {
         "outcome": "ANSWER",
