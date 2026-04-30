@@ -64,6 +64,9 @@ def ask(
     results = retrieve(query, species=species, top_k=top_k)
     outcome, reason, confidence = triage(query, results, species)
 
+    print(f"\n[PawPal] Q: {query}")
+    print(f"[PawPal] Species: {species} | Outcome: {outcome} | Confidence: {confidence:.2f}")
+
     if outcome == "VET":
         return {
             "outcome": "VET",
@@ -111,6 +114,7 @@ def ask(
         )
         response_text = gemini_response.text if gemini_response.text else _IDK_RESPONSE
 
+    print(f"[PawPal] A: {response_text}\n")
     return {
         "outcome": "ANSWER",
         "response": response_text,
